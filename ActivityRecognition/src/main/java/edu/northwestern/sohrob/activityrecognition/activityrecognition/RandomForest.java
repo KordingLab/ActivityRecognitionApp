@@ -101,8 +101,6 @@ public class RandomForest {
             }
         }
 
-        // added by Sohrob -- TEMPORARY **********************
-        // Apparrently sometimes maxPrediction is null!!!
         //Log.e("INF", "Class: " + maxPrediction);
         /*if (true) ((maxPrediction!=null)&&(maxPrediction.equals("1"))) {
             try {
@@ -113,7 +111,6 @@ public class RandomForest {
                 e.printStackTrace();
             }
         }*/
-        // ****************************************************
 
         HashMap<String, Object> prediction = new HashMap<String, Object>();
         prediction.put(LeafNode.PREDICTION, maxPrediction);
@@ -124,12 +121,7 @@ public class RandomForest {
 
         return prediction;
     }
-//what the hell is this?
-/*
-    public String summary(Context context) {
-        return context.getString(R.string.summary_model_forest);
-    }
-*/
+
     public String modelType() {
         return RandomForest.TYPE;
     }
