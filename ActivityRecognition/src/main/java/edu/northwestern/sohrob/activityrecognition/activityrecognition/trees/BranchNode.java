@@ -7,9 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 
-/**
- * Created by sohrob on 11/10/14.
- */
 public class BranchNode extends TreeNode {
 
     /**
@@ -166,11 +163,6 @@ public class BranchNode extends TreeNode {
         private static boolean testMoreThanOrEqualTo(double test, double value) throws TreeNodeException {
 
             return (value >= test);
-            /*if (value >= test)
-                return true;
-            else
-                return false;*/
-
         }
 
         /**
@@ -186,11 +178,6 @@ public class BranchNode extends TreeNode {
         private static boolean testLessThanOrEqualTo(double test, double value) throws TreeNodeException {
 
             return (value<=test);
-            /*if (value<=test)
-                return true;
-            else
-                return false;*/
-
         }
 
         /**
@@ -206,10 +193,6 @@ public class BranchNode extends TreeNode {
         private static boolean testMoreThan(double test, double value) throws TreeNodeException {
 
             return (value > test);
-            /*if (value > test)
-                return true;
-            else
-                return false;*/
         }
 
         /**
@@ -225,10 +208,6 @@ public class BranchNode extends TreeNode {
         private static boolean testLessThan(double test, double value) throws TreeNodeException {
 
             return (value < test);
-            /*if (value < test)
-                return true;
-            else
-                return false;*/
         }
 
         /**

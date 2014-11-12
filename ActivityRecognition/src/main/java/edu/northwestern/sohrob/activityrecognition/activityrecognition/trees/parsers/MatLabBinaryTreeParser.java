@@ -7,9 +7,6 @@ import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.Bra
 import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.LeafNode;
 import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.TreeNode;
 
-/**
- * Created by sohrob on 11/10/14.
- */
 public class MatLabBinaryTreeParser extends TreeNodeParser {
 
     private ArrayList<String> _lines = new ArrayList<String>();

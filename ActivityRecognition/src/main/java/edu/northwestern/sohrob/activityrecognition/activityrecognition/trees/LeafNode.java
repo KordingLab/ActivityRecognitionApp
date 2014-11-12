@@ -1,9 +1,5 @@
 package edu.northwestern.sohrob.activityrecognition.activityrecognition.trees;
 
-/**
- * Created by sohrob on 11/10/14.
- */
-
 import java.util.HashMap;
 import java.util.Map;
 

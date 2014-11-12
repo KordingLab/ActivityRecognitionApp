@@ -11,9 +11,6 @@ import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.Lea
 import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.TreeNode;
 import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.parsers.TreeNodeParser;
 
-/**
- * Created by sohrob on 11/10/14.
- */
 public class RandomForest {
 
     public static final String TYPE = "matlab-forest";

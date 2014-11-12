@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.ActivityRecognitionClient;
 
 import org.json.JSONException;
@@ -40,6 +41,9 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private ActivityRecognitionClient ARClient;
     private PendingIntent pIntent;
+
+    private static final String NEW_DATA = "edu.northwestern.sohrob.activityrecognition.activityrecognition.NEW_DATA";
+    private static final String DATA = "DATA";
 
     private ToneGenerator tg;
 
@@ -64,9 +68,9 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
     private SensorManager sensors;
     private Sensor accelerometer, gyroscope;
 
-    private Clip _accelerometerClip = null;
-    private Clip _gyroscopeClip = null;
-    //private Clip _barometerClip = null;
+    private final Clip _accelerometerClip = new Clip(3, WINDOW_SIZE, Clip.ACCELEROMETER);
+    private final Clip _gyroscopeClip  = new Clip(3, WINDOW_SIZE, Clip.GYROSCOPE);
+    //private final Clip _barometerClip = new Clip(1, WINDOW_SIZE, Clip.BAROMETER);
 
     private boolean _hasAccelerometer = false;
     private boolean _hasGyroscope = false;
@@ -77,7 +81,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private FeatureExtractor _accelerometerExtractor = null;
     private FeatureExtractor _gyroscopeExtractor = null;
-    private FeatureExtractor _barometerExtractor = null;
+    //private FeatureExtractor _barometerExtractor = null;
 
     private final HashMap<String, Double> _features = new HashMap<String, Double>();
 
@@ -305,6 +309,8 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        Log.e("Test", "Starting OnCreate...");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_activity_recognition);
 
@@ -320,8 +326,8 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         sensors.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME, null);
 
         // initializing clips
-        this._accelerometerClip = new Clip(3, WINDOW_SIZE, Clip.ACCELEROMETER);
-        this._gyroscopeClip = new Clip(3, WINDOW_SIZE, Clip.GYROSCOPE);
+        //this._accelerometerClip = new Clip(3, WINDOW_SIZE, Clip.ACCELEROMETER);
+        //this._gyroscopeClip = new Clip(3, WINDOW_SIZE, Clip.GYROSCOPE);
         //this._barometerClip = new Clip(1, WINDOW_SIZE, Clip.BAROMETER);
 
         //initializing feature arrays
@@ -365,7 +371,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
             BufferedReader in = new BufferedReader(new InputStreamReader(assets.open("matlab-forest.json")));
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
 
             String inputLine;
 
@@ -378,7 +384,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
             if (contents != null)
             {
-                JSONObject json = null;
+                JSONObject json;
                 RF = new RandomForest();
 
                 try {
@@ -404,37 +410,34 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
             e.printStackTrace();
         }
 
-        Log.e("Test", "OnCreate Finished!");
+        Log.e("Test", "OnCreate Finished.");
 
     }
 
     @Override
     protected void onStart() {
+
         Log.e("Test", "running onStart...");
         super.onStart();
 
-        //checking if Google Play Service is installed - skip it for now since we are sure that it is installed on the phone
-/*
-        int resp =GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        if(resp == ConnectionResult.SUCCESS){
-            arclient = new ActivityRecognitionClient(this, this, this);
-            arclient.connect();
+        //checking if Google Play Service is installed
+        int resp = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (resp == ConnectionResult.SUCCESS) {
+            ARClient = new ActivityRecognitionClient(this, this, this);
+            ARClient.connect();
         }
-        else{
+        else {
             Toast.makeText(this, "Please install Google Play Service.", Toast.LENGTH_SHORT).show();
         }
-*/
 
-        ARClient = new ActivityRecognitionClient(this, this, this);
-        ARClient.connect();
-
+        // setting up the intent filter for fetching Google's AR
         IntentFilter filter = new IntentFilter();
         filter.addAction("edu.northwestern.sohrob.myactivityrecognition.ACTIVITY_RECOGNITION_DATA");
         registerReceiver(receiver, filter);
 
         // staring the feature extraction thread
         this._extractFeatures = true;
-        if (this._featureThread == null || this._featureThread.isAlive() == false)
+        if (this._featureThread == null || !this._featureThread.isAlive())
         {
             // A dead thread cannot be restarted. A new thread has to be created.
             this._featureThread = new Thread(this._featureRunnable);
@@ -443,13 +446,12 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         // staring the random forest thread
         this._runRandomForest = true;
-        if (this._randomForestThread == null || this._randomForestThread.isAlive() == false)
+        if (this._randomForestThread == null || !this._randomForestThread.isAlive())
         {
             // A dead thread cannot be restarted. A new thread has to be created.
             this._randomForestThread = new Thread(this._randomForestRunnable);
             this._randomForestThread.start();
         }
-
 
     }
 
@@ -466,8 +468,14 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     @Override
     protected void onDestroy() {
+
         Log.e("Test", "running onDestroy...");
+
         super.onDestroy();
+
+        this._runRandomForest = false;
+        this._extractFeatures = false;
+
         if (ARClient != null) {
             ARClient.removeActivityUpdates(pIntent);
             ARClient.disconnect();
@@ -476,8 +484,6 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         sensors.unregisterListener(this, accelerometer);
         sensors.unregisterListener(this, gyroscope);
-
-        this._extractFeatures = false;
 
     }
 
@@ -554,11 +560,16 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     public void transmitAnalysis(String cls, String confidence) {
 
-        Bundle bundle = new Bundle();
-        bundle.putString("APP", "ACTIVITY RECOGNITION");
-        bundle.putLong("TIMESTAMP", System.currentTimeMillis() / 1000);
-        bundle.putString("CLASS", cls);
-        bundle.putString("CONFIDENCE", confidence);
+        Bundle data = new Bundle();
+        data.putString("APP", "ACTIVITY RECOGNITION");
+        data.putLong("TIMESTAMP", System.currentTimeMillis() / 1000);
+        data.putString("CLASS", cls);
+        data.putString("CONFIDENCE", confidence);
+
+        Intent broadcast = new Intent(ActivityRecognition.NEW_DATA);
+        broadcast.putExtra(ActivityRecognition.DATA, data);
+
+        this.sendBroadcast(broadcast);
 
         Log.e("INF", "Output Transmitted.");
 
