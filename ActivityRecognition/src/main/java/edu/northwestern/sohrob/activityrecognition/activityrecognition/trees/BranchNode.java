@@ -1,7 +1,5 @@
 package edu.northwestern.sohrob.activityrecognition.activityrecognition.trees;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -129,7 +127,7 @@ public class BranchNode extends TreeNode {
 
             if (value == null && this._operation != Operation.DEFAULT) {
                 // We're missing a value to test and this isn't a DEFAULT node.
-                Log.e("info", "null value");
+                //Log.e("info", "null value");
 
                 return false;
             }
@@ -275,6 +273,7 @@ public class BranchNode extends TreeNode {
     public Map<String, Object> fetchPrediction(Map<String, Double> features) throws TreeNode.TreeNodeException {
 
         for (Condition condition : this._conditions) {
+            //Log.e("inf", condition+"");
             if (condition.evaluate(features)) {
                 // Test passed - recurse down the test's associated node and
                 // continue...

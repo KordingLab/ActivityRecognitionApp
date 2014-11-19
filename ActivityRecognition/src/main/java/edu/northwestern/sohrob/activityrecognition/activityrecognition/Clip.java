@@ -92,6 +92,7 @@ public class Clip {
     }
 
     public List<double[]> getValues() {
+
         List<double[]> values = new ArrayList<double[]>();
 
         synchronized (this) {

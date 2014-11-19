@@ -1,0 +1,9 @@
+{
+	"accuracy": 0.800,
+	"model_type": "matlab-forest",
+	"model_source": "Matlab",
+	"name": "Matlab Forest Model Test",
+	"model": [
+		" 1  if ACCZ_MEAN<0.0 then node 2 elseif ACCZ_MEAN>=0.0 then node 3 else 2\n2  class = 1\n3  class = 2"
+]
+}

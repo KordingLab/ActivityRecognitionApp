@@ -2,40 +2,46 @@
 <pre-dex-items>
 
     <item
-        dex="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/classes-e66e210311f20ea84648da0114bd4525cb360d36.jar"
-        jar="/home/sohrob/Dropbox/Android/ActivityRecognition/build/intermediates/exploded-aar/com.android.support/appcompat-v7/20.0.0/classes.jar"
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/opencsv-3.0-314fbde57e78bc59cad8bc691501ed717c072602.jar"
+        jar="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/libs/opencsv-3.0.jar"
         jumboMode="false"
         revision="19.1.0"
-        sha1="f21927d22fe31889ecce94dd697a2e75b137e0ef"/>
+        sha1="8f5f973158e0aeada6378c685753fc0261019399"/>
     <item
-        dex="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/commons-math3-3.3-e9f6dc6558161461251d5aea395d3656b5542b06.jar"
-        jar="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/libs/commons-math3-3.3.jar"
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/internal_impl-20.0.0-826c4d51bab660b50a002afcf475fd9e86b4c84e.jar"
+        jar="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/exploded-aar/com.android.support/support-v4/20.0.0/libs/internal_impl-20.0.0.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="e40b3078e3fbd353c9f44da8df25a8fc0078209d"/>
+    <item
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/commons-math3-3.3-d0dea59a4ce6a78a65a289977866118181664555.jar"
+        jar="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/libs/commons-math3-3.3.jar"
         jumboMode="false"
         revision="19.1.0"
         sha1="a85dc3aa929de625606270ae69a343cda69b7670"/>
     <item
-        dex="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/support-annotations-20.0.0-d6e033011dbc5f26bd1c0e3334527cfe6d128cac.jar"
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/classes-e5d341412c5e1b21eed271e41202611cc27892d8.jar"
+        jar="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.1.71/classes.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="0f6d5c1ef2e982c3b7858408e3df389cf5d202da"/>
+    <item
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/support-annotations-20.0.0-d6e033011dbc5f26bd1c0e3334527cfe6d128cac.jar"
         jar="/home/sohrob/Android/android-sdk-linux/extras/android/m2repository/com/android/support/support-annotations/20.0.0/support-annotations-20.0.0.jar"
         jumboMode="false"
         revision="19.1.0"
         sha1="9d9013e9ff35fc3756411e62873c363c70c638fa"/>
     <item
-        dex="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/classes-1648944ca36735e422f01acb7c707f584b997b27.jar"
-        jar="/home/sohrob/Dropbox/Android/ActivityRecognition/build/intermediates/exploded-aar/com.android.support/support-v4/20.0.0/classes.jar"
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/classes-d87b66c283d2be575ecb808720d5e618c0b77189.jar"
+        jar="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/exploded-aar/com.android.support/support-v4/20.0.0/classes.jar"
         jumboMode="false"
         revision="19.1.0"
         sha1="8694693636ab36910c8100ce527c258ff3ebece0"/>
     <item
-        dex="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/internal_impl-20.0.0-d027fdd3126aafa625006e3951cbec405bb89609.jar"
-        jar="/home/sohrob/Dropbox/Android/ActivityRecognition/build/intermediates/exploded-aar/com.android.support/support-v4/20.0.0/libs/internal_impl-20.0.0.jar"
+        dex="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/classes-6ab414b4132314f322bf90bd31a873866b418cbd.jar"
+        jar="/home/sohrob/Dropbox/Code/Java/ActivityRecognition/ActivityRecognition/build/intermediates/exploded-aar/com.android.support/appcompat-v7/20.0.0/classes.jar"
         jumboMode="false"
         revision="19.1.0"
-        sha1="e40b3078e3fbd353c9f44da8df25a8fc0078209d"/>
-    <item
-        dex="/home/sohrob/Dropbox/Android/ActivityRecognition/ActivityRecognition/build/intermediates/pre-dexed/debug/classes-850c910b25aabc804d284bed29ae483ad91e3465.jar"
-        jar="/home/sohrob/Dropbox/Android/ActivityRecognition/build/intermediates/exploded-aar/com.google.android.gms/play-services/6.1.11/classes.jar"
-        jumboMode="false"
-        revision="19.1.0"
-        sha1="0f700f6802ba1a1f1fa7ac26d5db0666a89d75a6"/>
+        sha1="f21927d22fe31889ecce94dd697a2e75b137e0ef"/>
 
 </pre-dex-items>
