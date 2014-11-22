@@ -100,7 +100,8 @@ public class RandomForest {
             }
         }
 
-        Log.e("INF", "Class: " + maxPrediction);
+        Log.i("FTC/RandomForest", "Class: " + maxPrediction);
+        Log.i("FTC/RandomForest", "maxCount: " + maxCount);
         /*if (true) ((maxPrediction!=null)&&(maxPrediction.equals("1"))) {
             try {
                 ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 25);

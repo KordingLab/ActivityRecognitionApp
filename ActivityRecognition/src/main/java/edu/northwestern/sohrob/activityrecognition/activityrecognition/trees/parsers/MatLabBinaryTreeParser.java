@@ -45,15 +45,18 @@ public class MatLabBinaryTreeParser extends TreeNodeParser {
             BranchNode branch = new BranchNode(prefix + "->" + lineNo);
 
             // split the non-leaf line into the two conditions
-            String[] branchLines = line.substring(6).split(" else");
+            //String[] branchLines = line.substring(6).split(" else");  // new code
+            String[] branchLines = line.split(" else");                 // new code
 
             String ifString = branchLines[0];
             String elseString = branchLines[1];
 
-            // At this point, we have 2 strings that look like:
-            // "if x10<-0.999999 then node 4"
+            String[] ifStrings = ifString.split("if ");                 //new code
+            ifString = ifStrings[1];    // getting rid of line number   // new code
 
-            ifString = ifString.replace("if ", "");
+            // At this point, we have an if string that looks like:
+            // "x10<0.999999 then node 4"
+            //ifString = ifString.replace("if ", "");                   // new code
             ifString = ifString.replace("<", "|");
             ifString = ifString.replace(" then node ", "|");
 

@@ -17,7 +17,8 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,22 +58,34 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private ToneGenerator tg;
 
+    private boolean _fake_trial = false;
+    private boolean _trial_started = false;
+
     TextView sText;
 
     RandomForest RF;
+
+    private int _RFClass;
+    private List<Integer> _RFClass_list = new ArrayList<Integer>();
+    private String _GoogleClass;
+    private double _RFConfidence;
+    private int _GoogleConfidence;
 
     private String[] _feature_labels;
 
     private double _uptime_unix_sec;
 
+    private long _t_trial_start;
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String v = intent.getStringExtra("Activity") + " (" + intent.getExtras().getInt("Confidence") + "%)";
-            TextView gText = (TextView) findViewById(R.id.gText);
-            gText.setText(v);
-            Log.i("Test", intent.getStringExtra("Activity") + "-" + intent.getExtras().getInt("Confidence"));
+            //String v = "Google:\n" + intent.getStringExtra("Activity") + " (" + intent.getExtras().getInt("Confidence") + "%)";
+            //TextView gText = (TextView) findViewById(R.id.gText);
+            //gText.setText(v);
+            _GoogleClass = intent.getStringExtra("Activity");
+            _GoogleConfidence = intent.getExtras().getInt("Confidence");
+            //Log.i("Test", intent.getStringExtra("Activity") + "-" + intent.getExtras().getInt("Confidence"));
             /*if (intent.getStringExtra("Activity").equals("walking"))
                 tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);*/
         }
@@ -93,6 +107,9 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private boolean _extractFeatures = false;
     private boolean _runRandomForest = false;
+    private boolean _runDisplay = false;
+
+    private boolean _recording = false;
 
     private boolean _writeFeatures = false;
     private boolean _writeSensorValues = false;
@@ -161,13 +178,10 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
             };
 
     private Thread _featureThread = null;
-
     private Thread _randomForestThread = null;
+    private Thread _displayThread = null;
 
-    private Runnable _featureRunnable;
-
-    {
-        _featureRunnable = new Runnable() {
+    private Runnable _featureRunnable = new Runnable() {
             public void run() {
                 while (_extractFeatures) {
 
@@ -178,22 +192,22 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     // checking if the clip has moved since last time -- accelerometer
                     if (_accelerometerClip.getTimestamps().size() > 0) {
                         if (_accelerometerClip.getLastTimestamp() == last_timestamp_acc) {
-                            Log.e("PR", "P20FeaturesProbe: Clip hasn't moved since last feature extraction!");
+                            Log.e("FTC", "Warning: Clip hasn't moved since last feature extraction!");
                             //generateTone = true;
                         } else {
                             last_timestamp_acc = _accelerometerClip.getLastTimestamp();
-                            Log.e("PR", "P20FeaturesProbe: n_samp (acc) = " + _accelerometerClip.getTimestamps().size());
+                            Log.i("FTC", "n_samp (acc) = " + _accelerometerClip.getTimestamps().size());
                         }
                     }
 
                     // checking if the clip has moved since last time -- gyroscope
                     if (_gyroscopeClip.getTimestamps().size() > 0) {
                         if (_gyroscopeClip.getLastTimestamp() == last_timestamp_gyr) {
-                            Log.e("PR", "P20FeaturesProbe: Clip hasn't moved since last feature extraction!");
+                            Log.e("FTC", "Warning: Clip hasn't moved since last feature extraction!");
                             //generateTone = true;
                         } else {
                             last_timestamp_gyr = _gyroscopeClip.getLastTimestamp();
-                            Log.e("PR", "P20FeaturesProbe: n_samp (gyr) = " + _gyroscopeClip.getTimestamps().size());
+                            Log.i("FTC", "n_samp (gyr) = " + _gyroscopeClip.getTimestamps().size());
                         }
                     }
 
@@ -206,7 +220,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                             }
 
                             if (_accelerometerClip.getValues().size() < 100) {
-                                Log.e("FEATURE EXTRACTION THREAD", "Warning: Low number of acc samples!");
+                                Log.e("FTC", "Warning: Low number of acc samples!");
                                 //generateTone = true;
                             }
                         }
@@ -219,7 +233,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                             }
 
                             if (_gyroscopeClip.getValues().size() < 100) {
-                                Log.e("FEATURE EXTRACTION THREAD", "Warning: Low number of gyro samples!");
+                                Log.e("FTC", "Warning: Low number of gyro samples!");
                                 //generateTone = true;
                             }
 
@@ -285,7 +299,6 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                 }
             }
         };
-    }
 
     private Runnable _randomForestRunnable = new Runnable() {
         public void run() {
@@ -304,24 +317,14 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     @Override
                     public void run() {
                         //String v = "n_samp_acc = " + _accelerometerClip.getTimestamps().size() + "\n" + "n_samp_gyr = " + _gyroscopeClip.getTimestamps().size();
-                        int iCls;
-                        if (_prediction.get(LeafNode.PREDICTION)!=null)
-                            iCls = Integer.parseInt(""+_prediction.get(LeafNode.PREDICTION));
-                        else
-                            iCls = 0;
-                        String sCls = "";
-                        switch (iCls) {
-                            case 1:
-                                sCls = "sitting";
-                                break;
-                            case 2:
-                                sCls = "walking";
-                                tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
-                                break;
+                        if (_prediction.get(LeafNode.PREDICTION)!=null) {
+                            _RFClass = Integer.parseInt("" + _prediction.get(LeafNode.PREDICTION));
+                            _RFConfidence = (Double) _prediction.get(LeafNode.ACCURACY) * 100;
                         }
-                        String v = sCls + " (" + (int)((Double)_prediction.get(LeafNode.ACCURACY)*100) + "%)";
-                        sText = (TextView) findViewById(R.id.sText);
-                        sText.setText(v);
+                        else {
+                            _RFClass = 0;
+                            _RFConfidence = 0.0;
+                        }
                     }
                 });
 
@@ -336,6 +339,53 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
                 try {
                     Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    };
+
+    private Runnable _displayRunnable = new Runnable() {
+        public void run() {
+            while (_runDisplay) {
+                Log.e("inf", "Display Runnable");
+                String sCls = "";
+                switch (_RFClass) {
+                    case 1:
+                        sCls = "still";
+                        break;
+                    case 2:
+                        sCls = "walking";
+                        break;
+                }
+                final String v = "Google:\n"+_GoogleClass+ " ("+_GoogleConfidence+"%)\n\n"+"Random Forest:\n" + sCls + " (" + (int)(_RFConfidence) + "%)";
+                sText = (TextView) findViewById(R.id.sText);
+
+                if (_trial_started) {
+                    if (_RFClass==2)
+                        tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+                    long elapsed_time = System.currentTimeMillis() - _t_trial_start;
+                    if (elapsed_time > 10 * 60 * 1000) {
+                        onEndTrial();
+                    }
+                    if (_fake_trial) {
+                        if (Collections.frequency(_RFClass_list, 2)>300) {
+                            onEndTrial();
+                        }
+                    }
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sText.setText(v);
+                    }
+                });
+
+                try {
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -466,6 +516,8 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         context = getApplicationContext();
 
+
+
         Log.e("Test", "OnCreate Finished.");
 
     }
@@ -491,23 +543,6 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         filter.addAction("edu.northwestern.sohrob.myactivityrecognition.ACTIVITY_RECOGNITION_DATA");
         registerReceiver(receiver, filter);
 
-        // staring the feature extraction thread
-        /*this._extractFeatures = true;
-        if (this._featureThread == null || !this._featureThread.isAlive())
-        {
-            // A dead thread cannot be restarted. A new thread has to be created.
-            this._featureThread = new Thread(this._featureRunnable);
-            this._featureThread.start();
-        }
-
-        // staring the random forest thread
-        this._runRandomForest = true;
-        if (this._randomForestThread == null || !this._randomForestThread.isAlive())
-        {
-            // A dead thread cannot be restarted. A new thread has to be created.
-            this._randomForestThread = new Thread(this._randomForestRunnable);
-            this._randomForestThread.start();
-        }*/
 
     }
 
@@ -534,6 +569,15 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
             // A dead thread cannot be restarted. A new thread has to be created.
             this._randomForestThread = new Thread(this._randomForestRunnable);
             this._randomForestThread.start();
+        }
+
+        // staring the display thread
+        this._runDisplay = true;
+        if (this._displayThread == null || !this._displayThread.isAlive())
+        {
+            // A dead thread cannot be restarted. A new thread has to be created.
+            this._displayThread = new Thread(this._displayRunnable);
+            this._displayThread.start();
         }
 
     }
@@ -682,11 +726,14 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     }
 
-    public void onStartRecording(View view) {
+    // Free recording method for both sensors and feature values
+    /*public void onStartRecording(View view) {
 
-        if (!_writeFeatures) {  //start recording
+        if (!_recording) {  //start recording
             final ImageButton bRecord = (ImageButton) view;
             bRecord.setBackgroundColor(0xFF00FFFF);
+
+            _recording = true;
 
             _writeFeatures = true;
             _writeSensorValues = true;
@@ -700,6 +747,8 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         else {  // stop recording
             final ImageButton bRecord = (ImageButton) view;
             bRecord.setBackgroundColor(0x0000FFFF);
+
+            _recording = false;
 
             _writeFeatures = false;
             _writeSensorValues = false;
@@ -725,7 +774,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
             }
 
             if (writer_features==null || writer_accelerometer==null || writer_gyroscope==null) {
-                Log.e("INFO","Cannot write to files in directory " + csv_dir.toString());
+                Log.e("FTC","Error: Cannot write to files in directory " + csv_dir.toString());
             } else {
                 synchronized (_features_towrite) {
                     writer_features.writeAll(_features_towrite, false);
@@ -759,7 +808,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         }
 
 
-    }
+    }*/
 
     public void onPowerOff(View view) {
 
@@ -767,10 +816,109 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
             ARClient.removeActivityUpdates(pIntent);
             ARClient.disconnect();
         }
+
         this._runRandomForest = false;
         this._extractFeatures = false;
+
         unregisterReceiver(receiver);
 
+    }
+
+    public void onStartTrial(View view) {
+
+        final Button butStart = (Button) view;
+        butStart.setEnabled(false);
+
+        _RFClass_list.clear();
+
+        _writeSensorValues = true;
+        _trial_started = true;
+
+        if (context!=null) {
+            Toast toast = Toast.makeText(context, "Start the Activity!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+        _t_trial_start = System.currentTimeMillis();
+
+    }
+
+    private void onEndTrial() {
+
+        _writeSensorValues = false;
+        _trial_started = false;
+
+        tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 4000);
+
+        String filename_accelerometer = "acc.csv";
+        String filename_gyroscope = "gyr.csv";
+
+        File file_accelerometer, file_gyroscope;
+        file_accelerometer = new File(csv_dir, filename_accelerometer);
+        file_gyroscope = new File(csv_dir, filename_gyroscope);
+
+        CSVWriter writer_accelerometer = null;
+        CSVWriter writer_gyroscope = null;
+
+        try {
+            writer_accelerometer = new CSVWriter(new FileWriter(file_accelerometer), '\t');
+            writer_gyroscope = new CSVWriter(new FileWriter(file_gyroscope), '\t');
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (writer_accelerometer==null || writer_gyroscope==null) {
+            Log.e("FTC","Error: Cannot write to files in directory " + csv_dir.toString());
+        } else {
+
+            synchronized (_accelerometer_towrite) {
+                writer_accelerometer.writeAll(_accelerometer_towrite, false);
+                _accelerometer_towrite.clear();
+            }
+
+            synchronized (_gyroscope_towrite) {
+                writer_gyroscope.writeAll(_gyroscope_towrite, false);
+                _gyroscope_towrite.clear();
+            }
+
+            try {
+                writer_accelerometer.close();
+                writer_gyroscope.close();
+                Log.i("INFO","CSV files containing feature and sensor values written successfully." );
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+
+        final Button butt = (Button) findViewById(R.id.bStart);
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                butt.setEnabled(true);
+            }
+         });
+
+    }
+
+    public void onRadioButtonClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+
+        // Check which radio button was clicked
+        switch(view.getId()) {
+            case R.id.true_activity:
+                if (checked)
+                    _fake_trial = false;
+                    break;
+            case R.id.fake_activity:
+                if (checked)
+                    _fake_trial = true;
+                    break;
+        }
     }
 
 }

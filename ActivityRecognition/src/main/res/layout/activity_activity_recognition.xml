@@ -2,31 +2,64 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
+    android:background="#550099"
     tools:context=".MainActivity" >
 
     <TextView
-        android:id="@+id/gText"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        android:textColor="#0000FF"
-        android:textStyle="bold"
-        android:textSize="35sp"
-        android:gravity="top|left"
-        android:text="Starting..." />
+        android:id="@+id/email_address"
+        android:layout_width="fill_parent"
+        android:text = "Trial Type"
+        android:textColor="#AAAAAA"
+        android:textSize="20sp"
+        android:layout_height="wrap_content" />
+
+    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/email_address"
+        android:orientation="horizontal">
+        <RadioButton android:id="@+id/true_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="True"
+            android:textSize="30sp"
+            android:textColor="#FFFFFF"
+            android:checked="true"
+            android:onClick="onRadioButtonClicked"/>
+        <RadioButton android:id="@+id/fake_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fake"
+            android:textSize="30sp"
+            android:textColor="#FFFFFF"
+            android:onClick="onRadioButtonClicked"/>
+    </RadioGroup>
 
     <TextView
         android:id="@+id/sText"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:keepScreenOn="true"
-        android:textColor="#00FF00"
-        android:textStyle="bold"
-        android:textSize="35sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="normal"
+        android:textSize="25sp"
         android:gravity="center|left"
         android:text="Starting..." />
+    <Button
+        android:id="@+id/bStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="Start"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:onClick="onStartTrial"
+        />
 
+</RelativeLayout>
+
+<!--
     <ImageButton
         android:id="@+id/record"
         android:layout_height="wrap_content"
@@ -37,7 +70,7 @@
         android:onClick="onStartRecording"
         android:background="#0000FFFF"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentLeft="true" />
 
     <ImageButton
         android:id="@+id/poweroff"
@@ -50,5 +83,4 @@
         android:background="#0000FFFF"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true" />
-
-</RelativeLayout>
+-->
