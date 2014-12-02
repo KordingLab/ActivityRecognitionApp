@@ -7,11 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -48,6 +50,10 @@ import edu.northwestern.sohrob.activityrecognition.activityrecognition.trees.Lea
 
 public class ActivityRecognition extends Activity implements GooglePlayServicesClient.ConnectionCallbacks,GooglePlayServicesClient.OnConnectionFailedListener,SensorEventListener {
 
+    private static enum TrialType {WALK, SIT};
+
+    TrialType _trialType = TrialType.WALK;
+
     private Context context;
 
     private ActivityRecognitionClient ARClient;
@@ -58,8 +64,16 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private ToneGenerator tg;
 
-    private boolean _fake_trial = false;
+    //private boolean _fake_trial = false;
     private boolean _trial_started = false;
+
+    private static final long WINDOW_SIZE = (long) 4e9; // sensor timestamps are in nanoseconds
+    private static final long WINDOW_SHIFT = (long) 1e9; // sensor timestamps are in nanoseconds
+
+    private final int f_interp = 50;    // (Hz) sampling frequency of interpolation prior to feature extraction
+
+    private long trial_length_millis = 300000;
+    private long n_success = (trial_length_millis/((long)(WINDOW_SHIFT/1e6)))/2;
 
     TextView sText;
 
@@ -128,10 +142,6 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
     private long last_timestamp_gyr = 0;
     //private long last_timestamp_bar = 0;
 
-    private static final long WINDOW_SIZE = (long) 4e9; // sensor timestamps are in nanoseconds
-    private static final long WINDOW_SHIFT = (long) 1e9; // sensor timestamps are in nanoseconds
-
-    private final int f_interp = 50;    // (Hz) sampling frequency of interpolation prior to feature extraction
 
     private FeatureExtractor.Feature[] _featureList =
             {
@@ -285,11 +295,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                         //accounting for the processing time / also converting from ns to ms
 
                         long sleepTime = WINDOW_SHIFT / (long) 1e6 - deltaT;
-
-                        //in the rare case that processing time is greater than window shift interval
-
-                        if (sleepTime < 0)
-                            sleepTime = 0;
+                        if (sleepTime < 0) sleepTime = 0;
 
                         Thread.sleep(sleepTime);
                     } catch (Exception e) {
@@ -313,28 +319,21 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     _prediction = RF.evaluateModel(_features);
                 }
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //String v = "n_samp_acc = " + _accelerometerClip.getTimestamps().size() + "\n" + "n_samp_gyr = " + _gyroscopeClip.getTimestamps().size();
-                        if (_prediction.get(LeafNode.PREDICTION)!=null) {
-                            _RFClass = Integer.parseInt("" + _prediction.get(LeafNode.PREDICTION));
-                            _RFConfidence = (Double) _prediction.get(LeafNode.ACCURACY) * 100;
-                        }
-                        else {
-                            _RFClass = 0;
-                            _RFConfidence = 0.0;
-                        }
-                    }
-                });
+                if (_prediction.get(LeafNode.PREDICTION)!=null) {
+                    _RFClass = Integer.parseInt("" + _prediction.get(LeafNode.PREDICTION));
+                    _RFConfidence = (Double) _prediction.get(LeafNode.ACCURACY) * 100;
+                }
+                else {
+                    _RFClass = 0;
+                    _RFConfidence = 0.0;
+                }
+                _RFClass_list.add(_RFClass);
 
                 transmitAnalysis(""+_prediction.get(LeafNode.PREDICTION), ""+_prediction.get(LeafNode.ACCURACY));
 
                 long deltaT = System.currentTimeMillis() - now;
 
                 long sleepTime = WINDOW_SHIFT / (long) 1e6 - deltaT;
-
-                // in case that processing time is greater than window shift interval
                 if (sleepTime < 0) sleepTime = 0;
 
                 try {
@@ -350,7 +349,9 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
     private Runnable _displayRunnable = new Runnable() {
         public void run() {
             while (_runDisplay) {
-                Log.e("inf", "Display Runnable");
+
+                long now = System.currentTimeMillis();
+
                 String sCls = "";
                 switch (_RFClass) {
                     case 1:
@@ -364,17 +365,41 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                 sText = (TextView) findViewById(R.id.sText);
 
                 if (_trial_started) {
-                    if (_RFClass==2)
-                        tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
                     long elapsed_time = System.currentTimeMillis() - _t_trial_start;
-                    if (elapsed_time > 10 * 60 * 1000) {
-                        onEndTrial();
+                    if (elapsed_time > trial_length_millis) {
+                        onEndTrial(false);
+                        break;
                     }
+                    switch (_trialType) {
+                        case WALK:
+                            Log.i("inf","n_success: "+n_success);
+                            Log.i("inf","frequency: "+Collections.frequency(_RFClass_list, 1));
+                            if (Collections.frequency(_RFClass_list, 1) > n_success) {
+                                onEndTrial(true);
+                            }
+                            if (_RFClass==2)
+                                tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+                            break;
+                        case SIT:
+                            if (Collections.frequency(_RFClass_list, 2) > n_success) {
+                                onEndTrial(true);
+                            }
+                            if (_RFClass==1)
+                                tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+                            break;
+                    }
+                    /*
                     if (_fake_trial) {
-                        if (Collections.frequency(_RFClass_list, 2)>300) {
+                        if (Collections.frequency(_RFClass_list, 2) > n_success) {
                             onEndTrial();
                         }
+                        if (_RFClass==1)
+                            tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
                     }
+                    else {
+                        if (_RFClass==2)
+                            tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+                    }*/
                 }
 
                 runOnUiThread(new Runnable() {
@@ -384,8 +409,15 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     }
                 });
 
+                long deltaT = System.currentTimeMillis() - now;
+
+                //Log.e("inf","Display Processing Time: "+deltaT);
+
+                long sleepTime = WINDOW_SHIFT / (long) 1e6 - deltaT;
+                if (sleepTime < 0) sleepTime = 0;
+
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -828,6 +860,21 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         final Button butStart = (Button) view;
         butStart.setEnabled(false);
+        butStart.setTextColor(Color.parseColor("#000000"));
+
+        final Button butStop = (Button) findViewById(R.id.bStop);
+        final RadioButton radWalk = (RadioButton) findViewById(R.id.Walk);
+        final RadioButton radSit = (RadioButton) findViewById(R.id.Sit);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //butTrialType.setEnabled(false);
+                butStop.setEnabled(true);
+                butStop.setTextColor(Color.parseColor("#FF0000"));
+                radWalk.setEnabled(false);
+                radSit.setEnabled(false);
+            }
+        }); // since this view is not created by the current thread, we need to explicitly run it on the UI thread
 
         _RFClass_list.clear();
 
@@ -843,12 +890,17 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     }
 
-    private void onEndTrial() {
+    private void onEndTrial(boolean success) {
+
+        if (success) {
+            MediaPlayer mp = MediaPlayer.create(this, R.raw.applause);
+            mp.start();
+        } else {
+            tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 4000);
+        }
 
         _writeSensorValues = false;
         _trial_started = false;
-
-        tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 4000);
 
         String filename_accelerometer = "acc.csv";
         String filename_gyroscope = "gyr.csv";
@@ -891,16 +943,22 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         }
 
+        final Button butStart = (Button) findViewById(R.id.bStart);
+        final Button butStop = (Button) findViewById(R.id.bStop);
 
-
-        final Button butt = (Button) findViewById(R.id.bStart);
-
+        final RadioButton radWalk = (RadioButton) findViewById(R.id.Walk);
+        final RadioButton radSit = (RadioButton) findViewById(R.id.Sit);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                butt.setEnabled(true);
+                butStart.setEnabled(true);
+                butStart.setTextColor(Color.parseColor("#00FF00"));
+                butStop.setEnabled(false);
+                butStop.setTextColor(Color.parseColor("#000000"));
+                radWalk.setEnabled(true);
+                radSit.setEnabled(true);
             }
-         });
+         }); // since these views are not created by the current thread, we need to explicitly run them on the UI thread
 
     }
 
@@ -910,15 +968,21 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         // Check which radio button was clicked
         switch(view.getId()) {
-            case R.id.true_activity:
+            case R.id.Walk:
                 if (checked)
-                    _fake_trial = false;
+                    _trialType = TrialType.WALK;
                     break;
-            case R.id.fake_activity:
+            case R.id.Sit:
                 if (checked)
-                    _fake_trial = true;
+                    _trialType = TrialType.SIT;
                     break;
         }
+    }
+
+    public void onStopTrial(View view) {
+
+        onEndTrial(false);
+
     }
 
 }

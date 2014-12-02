@@ -2,38 +2,53 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#550099"
+    android:background="#330066"
     tools:context=".MainActivity" >
 
     <TextView
-        android:id="@+id/email_address"
+        android:id="@+id/radioTitle"
         android:layout_width="fill_parent"
-        android:text = "Trial Type"
+        android:text = "Select trial type:"
         android:textColor="#AAAAAA"
         android:textSize="20sp"
         android:layout_height="wrap_content" />
 
+    <View
+        android:id="@+id/line1"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/radioTitle"
+        android:background="@android:color/darker_gray"/>
+
     <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id = "@+id/TrialType"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/email_address"
+        android:layout_below="@+id/line1"
         android:orientation="horizontal">
-        <RadioButton android:id="@+id/true_activity"
+        <RadioButton android:id="@+id/Walk"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="True"
+            android:text="Walk"
             android:textSize="30sp"
             android:textColor="#FFFFFF"
             android:checked="true"
             android:onClick="onRadioButtonClicked"/>
-        <RadioButton android:id="@+id/fake_activity"
+        <RadioButton android:id="@+id/Sit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Fake"
+            android:text="Sit"
             android:textSize="30sp"
             android:textColor="#FFFFFF"
             android:onClick="onRadioButtonClicked"/>
     </RadioGroup>
+
+    <View
+        android:id="@+id/line2"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/TrialType"
+        android:background="@android:color/darker_gray"/>
 
     <TextView
         android:id="@+id/sText"
@@ -45,17 +60,34 @@
         android:textSize="25sp"
         android:gravity="center|left"
         android:text="Starting..." />
+
     <Button
         android:id="@+id/bStart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentLeft="true"
         android:text="Start"
         android:textSize="40sp"
         android:textStyle="bold"
         android:onClick="onStartTrial"
+        android:textColor="#00FF00"
         />
+
+    <Button
+        android:id="@+id/bStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="Stop"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:onClick="onStopTrial"
+        android:enabled="false"
+        android:textColor="#000000"
+        />
+
 
 </RelativeLayout>
 
