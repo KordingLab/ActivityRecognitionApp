@@ -166,6 +166,9 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     Feature.ACCX_HIST1, Feature.ACCX_HIST2, Feature.ACCX_HIST3, Feature.ACCX_HIST4, Feature.ACCX_HIST5, Feature.ACCX_HIST6,
                     Feature.ACCY_HIST1, Feature.ACCY_HIST2, Feature.ACCY_HIST3, Feature.ACCY_HIST4, Feature.ACCY_HIST5, Feature.ACCY_HIST6,
                     Feature.ACCZ_HIST1, Feature.ACCZ_HIST2, Feature.ACCZ_HIST3, Feature.ACCZ_HIST4, Feature.ACCZ_HIST5, Feature.ACCZ_HIST6,
+                    Feature.ACCX_FFT1, Feature.ACCX_FFT2, Feature.ACCX_FFT3, Feature.ACCX_FFT4, Feature.ACCX_FFT5, Feature.ACCX_FFT6, Feature.ACCX_FFT7, Feature.ACCX_FFT8, Feature.ACCX_FFT9, Feature.ACCX_FFT10, Feature.ACCX_FFT11, Feature.ACCX_FFT12, Feature.ACCX_FFT13, Feature.ACCX_FFT14, Feature.ACCX_FFT15, Feature.ACCX_FFT16, Feature.ACCX_FFT17, Feature.ACCX_FFT18, Feature.ACCX_FFT19,
+                    Feature.ACCY_FFT1, Feature.ACCY_FFT2, Feature.ACCY_FFT3, Feature.ACCY_FFT4, Feature.ACCY_FFT5, Feature.ACCY_FFT6, Feature.ACCY_FFT7, Feature.ACCY_FFT8, Feature.ACCY_FFT9, Feature.ACCY_FFT10, Feature.ACCY_FFT11, Feature.ACCY_FFT12, Feature.ACCY_FFT13, Feature.ACCY_FFT14, Feature.ACCY_FFT15, Feature.ACCY_FFT16, Feature.ACCY_FFT17, Feature.ACCY_FFT18, Feature.ACCY_FFT19,
+                    Feature.ACCZ_FFT1, Feature.ACCZ_FFT2, Feature.ACCZ_FFT3, Feature.ACCZ_FFT4, Feature.ACCZ_FFT5, Feature.ACCZ_FFT6, Feature.ACCZ_FFT7, Feature.ACCZ_FFT8, Feature.ACCZ_FFT9, Feature.ACCZ_FFT10, Feature.ACCZ_FFT11, Feature.ACCZ_FFT12, Feature.ACCZ_FFT13, Feature.ACCZ_FFT14, Feature.ACCZ_FFT15, Feature.ACCZ_FFT16, Feature.ACCZ_FFT17, Feature.ACCZ_FFT18, Feature.ACCZ_FFT19,
                     Feature.GYR_MEAN, Feature.GYRX_MEAN, Feature.GYRY_MEAN, Feature.GYRZ_MEAN,
                     Feature.GYR_MEAN_ABS, Feature.GYRX_MEAN_ABS, Feature.GYRY_MEAN_ABS, Feature.GYRZ_MEAN_ABS,
                     Feature.GYRX_STD, Feature.GYRY_STD, Feature.GYRZ_STD,
@@ -184,7 +187,10 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     Feature.GYR_CROSS_XY_NORM_ABS, Feature.GYR_CROSS_YZ_NORM_ABS, Feature.GYR_CROSS_ZX_NORM_ABS,
                     Feature.GYRX_HIST1, Feature.GYRX_HIST2, Feature.GYRX_HIST3, Feature.GYRX_HIST4, Feature.GYRX_HIST5, Feature.GYRX_HIST6,
                     Feature.GYRY_HIST1, Feature.GYRY_HIST2, Feature.GYRY_HIST3, Feature.GYRY_HIST4, Feature.GYRY_HIST5, Feature.GYRY_HIST6,
-                    Feature.GYRZ_HIST1, Feature.GYRZ_HIST2, Feature.GYRZ_HIST3, Feature.GYRZ_HIST4, Feature.GYRZ_HIST5, Feature.GYRZ_HIST6
+                    Feature.GYRZ_HIST1, Feature.GYRZ_HIST2, Feature.GYRZ_HIST3, Feature.GYRZ_HIST4, Feature.GYRZ_HIST5, Feature.GYRZ_HIST6,
+                    Feature.GYRX_FFT1, Feature.GYRX_FFT2, Feature.GYRX_FFT3, Feature.GYRX_FFT4, Feature.GYRX_FFT5, Feature.GYRX_FFT6, Feature.GYRX_FFT7, Feature.GYRX_FFT8, Feature.GYRX_FFT9, Feature.GYRX_FFT10, Feature.GYRX_FFT11, Feature.GYRX_FFT12, Feature.GYRX_FFT13, Feature.GYRX_FFT14, Feature.GYRX_FFT15, Feature.GYRX_FFT16, Feature.GYRX_FFT17, Feature.GYRX_FFT18, Feature.GYRX_FFT19,
+                    Feature.GYRY_FFT1, Feature.GYRY_FFT2, Feature.GYRY_FFT3, Feature.GYRY_FFT4, Feature.GYRY_FFT5, Feature.GYRY_FFT6, Feature.GYRY_FFT7, Feature.GYRY_FFT8, Feature.GYRY_FFT9, Feature.GYRY_FFT10, Feature.GYRY_FFT11, Feature.GYRY_FFT12, Feature.GYRY_FFT13, Feature.GYRY_FFT14, Feature.GYRY_FFT15, Feature.GYRY_FFT16, Feature.GYRY_FFT17, Feature.GYRY_FFT18, Feature.GYRY_FFT19,
+                    Feature.GYRZ_FFT1, Feature.GYRZ_FFT2, Feature.GYRZ_FFT3, Feature.GYRZ_FFT4, Feature.GYRZ_FFT5, Feature.GYRZ_FFT6, Feature.GYRZ_FFT7, Feature.GYRZ_FFT8, Feature.GYRZ_FFT9, Feature.GYRZ_FFT10, Feature.GYRZ_FFT11, Feature.GYRZ_FFT12, Feature.GYRZ_FFT13, Feature.GYRZ_FFT14, Feature.GYRZ_FFT15, Feature.GYRZ_FFT16, Feature.GYRZ_FFT17, Feature.GYRZ_FFT18, Feature.GYRZ_FFT19
             };
 
     private Thread _featureThread = null;
@@ -437,7 +443,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_activity_recognition);
 
-        tg = new ToneGenerator(AudioManager.STREAM_ALARM, 25);
+        tg = new ToneGenerator(AudioManager.STREAM_ALARM, 50);
 
         // registering the sensors (only accelerometer and gyroscope at the moment)
         sensors = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -893,8 +899,18 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
     private void onEndTrial(boolean success) {
 
         if (success) {
+            AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0);
             MediaPlayer mp = MediaPlayer.create(this, R.raw.applause);
+            //mp.setVolume(1,1);
             mp.start();
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //Toast toast = Toast.makeText(context, "Success!", Toast.LENGTH_SHORT);
+            //toast.show();
         } else {
             tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 4000);
         }
