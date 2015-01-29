@@ -1,7 +1,5 @@
 package edu.northwestern.sohrob.activityrecognition.activityrecognition;
 
-import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -100,8 +98,9 @@ public class RandomForest {
             }
         }
 
-        Log.i("FTC/RandomForest", "Class: " + maxPrediction);
-        Log.i("FTC/RandomForest", "maxCount: " + maxCount);
+        //Log.i("FTC/RandomForest", "Class: " + maxPrediction);
+        //Log.i("FTC/RandomForest", "maxCount: " + maxCount);
+
         /*if (true) ((maxPrediction!=null)&&(maxPrediction.equals("1"))) {
             try {
                 ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 25);

@@ -900,14 +900,14 @@ public class FeatureExtractor {
 
         Complex[] fft_complex = _fft.transform(signalArray, TransformType.FORWARD);
 
-        double sum = 0.0;
+        //double sum = 0.0;
         for (int i=0; i<this._NFFT; i++) {
             fft_values[i] = fft_complex[i+1].abs(); //neglecting the first coefficient as it represents the energy
-            sum += fft_values[i];
+            //sum += fft_values[i];
         }
 
-        for (int i=0; i<this._NFFT; i++)
-            fft_values[i] /= sum;
+        //for (int i=0; i<this._NFFT; i++)
+            //fft_values[i] /= sum;
 
 
         return fft_values;
