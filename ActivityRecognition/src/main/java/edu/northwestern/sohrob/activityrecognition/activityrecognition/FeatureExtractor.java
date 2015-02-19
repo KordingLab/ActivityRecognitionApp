@@ -82,7 +82,7 @@ public class FeatureExtractor {
         this._binEdges = Arrays.copyOf(edges, edges.length);
     }*/
 
-    public Map<String, Double> extractFeatures(Clip clp, int f_interp) {
+    public Map<String, Double> extractFeatures(Clip clp) {
 
         HashMap<String, Double> features = new HashMap<String, Double>();
 
@@ -91,7 +91,7 @@ public class FeatureExtractor {
 
         // Spline Interpolation
         //List<double[]> signal = this.interpolate(clip.getValues(), clip.getTimestamps(), f_interp);
-        List<double[]> signal = clip.getValues();//////////////////////////////////
+        List<double[]> signal = clip.getValues();
 
         // Calculating the statistical moments
         double[] mean = new double[this._dimensions];
@@ -692,10 +692,10 @@ public class FeatureExtractor {
 
         int N = signal.size();
 
-        double[][] signalArray = new double[N][this._dimensions];
+        double[] signalArray = new double[N];
 
         for (int i = 0; i < N; i++) {
-            signalArray[i] = signal.get(i);
+            signalArray[i] = signal.get(i)[axis];
         }
 
         // Calculation of moments is not possible with less than 2 samples. Returning zeros in that case.
@@ -705,7 +705,7 @@ public class FeatureExtractor {
         double sum = 0.0;
 
         for (int i = 0; i < N; i++)
-            sum += signalArray[i][axis];
+            sum += signalArray[i];
 
         double mean = sum / N;
 
@@ -713,15 +713,14 @@ public class FeatureExtractor {
         double m3 = 0.0;
         double m4 = 0.0;
 
-
         for (int i = 0; i < N; i++) {
-            double t2 = (signalArray[i][axis] - mean) * (signalArray[i][axis] - mean);
+            double t2 = (signalArray[i] - mean) * (signalArray[i] - mean);
             m2 += t2;
 
-            double t3 = t2 * (signalArray[i][axis] - mean);
+            double t3 = t2 * (signalArray[i] - mean);
             m3 += t3;
 
-            double t4 = t3 * (signalArray[i][axis] - mean);
+            double t4 = t3 * (signalArray[i] - mean);
             m4 += t4;
         }
 
@@ -752,12 +751,6 @@ public class FeatureExtractor {
 
         double ms = 0;
 
-        /*
-         * for (int i = 0; i < signal.size(); i++) { for (int j = 0; j <
-         * this._dimensions; j++) ms += signal.get(i)[j] * signal.get(i)[j] /
-         * this._dimensions; }
-         */
-
         for (int i = 0; i < N; i++)
             for (int j = 0; j < this._dimensions; j++)
                 ms += signalArray[i][j] * signalArray[i][j] / this._dimensions;
@@ -784,7 +777,7 @@ public class FeatureExtractor {
 
         int N = signal.size();
 
-        if (N == 0) // CJK Question / TODO: Is this always the right answer?
+        if (N == 0)
             return 0;
 
         double max = signal.get(0)[axis];
@@ -801,7 +794,7 @@ public class FeatureExtractor {
 
         int N = signal.size();
 
-        if (N == 0) // CJK Question / TODO: Is this always the right answer?
+        if (N == 0)
             return 0;
 
         double min = signal.get(0)[axis];

@@ -22,6 +22,7 @@ public class ActivityRecognitionService extends IntentService  {
             Intent i = new Intent("edu.northwestern.sohrob.myactivityrecognition.ACTIVITY_RECOGNITION_DATA");
             i.putExtra("Activity", getType(result.getProbableActivities()));
             i.putExtra("Confidence", result.getMostProbableActivity().getConfidence());
+            i.putExtra("Timestamp", result.getTime());
             sendBroadcast(i);
         }
     }

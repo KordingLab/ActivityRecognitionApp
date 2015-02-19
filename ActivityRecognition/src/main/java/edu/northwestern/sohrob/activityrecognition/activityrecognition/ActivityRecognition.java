@@ -13,7 +13,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -68,7 +67,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
     private static final long WINDOW_SIZE = (long) 4e9; // sensor timestamps are in nanoseconds
     private static final long WINDOW_SHIFT = (long) 1e9; // sensor timestamps are in nanoseconds
 
-    private final int f_interp = 50;    // (Hz) sampling frequency of interpolation prior to feature extraction
+    //private final int f_interp = 50;    // (Hz) sampling frequency of interpolation prior to feature extraction
 
     private long trial_length_millis = 300000;
     private long n_success = (trial_length_millis/((long)(WINDOW_SHIFT/1e6)))/2;
@@ -79,28 +78,35 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private int _RFClass;
     private List<Integer> _RFClass_list = new ArrayList<Integer>();
-    private String _GoogleClass;
     private double _RFConfidence;
+
+    private String _GoogleClass;
     private int _GoogleConfidence;
-
-    private double _uptime_unix_sec;
-
-    private long _t_trial_start;
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //String v = "Google:\n" + intent.getStringExtra("Activity") + " (" + intent.getExtras().getInt("Confidence") + "%)";
-            //TextView gText = (TextView) findViewById(R.id.gText);
-            //gText.setText(v);
-            _GoogleClass = intent.getStringExtra("Activity");
+            //_GoogleClass = intent.getStringExtra("Activity");
+            _GoogleClass = intent.getExtras().getString("Activity");
             _GoogleConfidence = intent.getExtras().getInt("Confidence");
-            //Log.i("Test", intent.getStringExtra("Activity") + "-" + intent.getExtras().getInt("Confidence"));
-            /*if (intent.getStringExtra("Activity").equals("walking"))
-                tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);*/
+            long timestamp = intent.getExtras().getLong("Timestamp");
+            if (_writeSensorValues) {
+                String[] _google_towrite_row = new String[3];
+                _google_towrite_row[0] = String.valueOf(timestamp);
+                _google_towrite_row[1] = _GoogleClass;
+                _google_towrite_row[2] = String.valueOf(_GoogleConfidence);
+                synchronized (_google_towrite) {
+                    _google_towrite.add(_google_towrite_row);
+                }
+            }
+
         }
 
     };
+
+    private double _uptime_unix_sec;
+
+    private long _t_trial_start;
 
     private File csv_dir;
 
@@ -129,6 +135,8 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
     private final List<String[]> _accelerometer_towrite = new ArrayList<String[]>();
     private final List<String[]> _gyroscope_towrite = new ArrayList<String[]>();
+    private final List<String[]> _google_towrite = new ArrayList<String[]>();
+    private final List<String[]> _rf_towrite = new ArrayList<String[]>();
 
     private long last_timestamp_acc = 0;
     private long last_timestamp_gyr = 0;
@@ -219,7 +227,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     if (_hasAccelerometer) {
                         synchronized (_accelerometerClip) {
                             synchronized (_features) {
-                                _features.putAll(_accelerometerExtractor.extractFeatures(_accelerometerClip, f_interp));
+                                _features.putAll(_accelerometerExtractor.extractFeatures(_accelerometerClip));
 
                             }
 
@@ -232,7 +240,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     if (_hasGyroscope) {
                         synchronized (_gyroscopeClip) {
                             synchronized (_features) {
-                                _features.putAll(_gyroscopeExtractor.extractFeatures(_gyroscopeClip, f_interp));
+                                _features.putAll(_gyroscopeExtractor.extractFeatures(_gyroscopeClip));
                             }
 
                             if (_gyroscopeClip.getValues().size() < 100) {
@@ -245,7 +253,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                 /*if (_hasBarometer) {
                     synchronized (_barometerClip) {
                         synchronized (_features) {
-                            _features.putAll(_barometerExtractor.extractFeatures(_barometerClip, f_interp));
+                            _features.putAll(_barometerExtractor.extractFeatures(_barometerClip));
                         }
 
                         if (_barometerClip.getValues().size() < 100) {
@@ -297,6 +305,17 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     _RFClass = 0;
                     _RFConfidence = 0.0;
                 }
+
+                if (_writeSensorValues) {
+                    String[] _rf_towrite_row = new String[3];
+                    _rf_towrite_row[0] = String.valueOf(((double)now)/1000.0);
+                    _rf_towrite_row[1] = String.valueOf(_RFClass);
+                    _rf_towrite_row[2] = String.valueOf(_RFConfidence);
+                    synchronized (_rf_towrite) {
+                        _rf_towrite.add(_rf_towrite_row);
+                    }
+                }
+
                 _RFClass_list.add(_RFClass);
 
                 transmitAnalysis(""+_prediction.get(LeafNode.PREDICTION), ""+_prediction.get(LeafNode.ACCURACY));
@@ -401,7 +420,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_activity_recognition);
 
-        tg = new ToneGenerator(AudioManager.STREAM_ALARM, 25);
+        tg = new ToneGenerator(AudioManager.STREAM_ALARM, 50);
 
         // registering the sensors (only accelerometer and gyroscope at the moment)
         sensors = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -469,7 +488,7 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
             String contents = sb.toString();
 
-            if (contents != null)
+            if (!contents.equals(null))
             {
                 JSONObject json;
                 RF = new RandomForest();
@@ -485,7 +504,8 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                     e.printStackTrace();
                 }
 
-            }
+            } else
+                Log.e("error", "could not read the forest file.");
 
 
         } catch (IOException e) {
@@ -764,16 +784,17 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
 
         String result;
         if (success) {
-            AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0);
+            /*AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 15, 0);
             MediaPlayer mp = MediaPlayer.create(this, R.raw.applause);
-            mp.start();
+            mp.start();*/
+            tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 4000);
             result = "success";
-            try {
+            /*try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
         } else {
             tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 4000);
             result = "failure";
@@ -785,14 +806,22 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         String filename_accelerometer = "acc.csv";
         String filename_gyroscope = "gyr.csv";
         String filename_result = "result.txt";
+        String filename_google = "ggl.csv";
+        String filename_rf = "rfm.csv";
 
-        File file_accelerometer, file_gyroscope, file_result;
+        File file_accelerometer, file_gyroscope, file_result, file_google, file_rf;
+
         file_accelerometer = new File(csv_dir, filename_accelerometer);
         file_gyroscope = new File(csv_dir, filename_gyroscope);
         file_result = new File(csv_dir, filename_result);
+        file_google = new File(csv_dir, filename_google);
+        file_rf = new File(csv_dir, filename_rf);
 
         CSVWriter writer_accelerometer = null;
         CSVWriter writer_gyroscope = null;
+        CSVWriter writer_google = null;
+        CSVWriter writer_rf = null;
+
         try {
             FileWriter writer_result = new FileWriter(file_result);
             writer_result.append(result);
@@ -805,11 +834,13 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
         try {
             writer_accelerometer = new CSVWriter(new FileWriter(file_accelerometer), '\t');
             writer_gyroscope = new CSVWriter(new FileWriter(file_gyroscope), '\t');
+            writer_google = new CSVWriter(new FileWriter(file_google), '\t');
+            writer_rf = new CSVWriter(new FileWriter(file_rf), '\t');
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        if (writer_accelerometer==null || writer_gyroscope==null) {
+        if (writer_accelerometer==null || writer_gyroscope==null || writer_google==null || writer_rf==null) {
             Log.e("FTC","Error: Cannot write to files in directory " + csv_dir.toString());
         } else {
 
@@ -823,9 +854,21 @@ public class ActivityRecognition extends Activity implements GooglePlayServicesC
                 _gyroscope_towrite.clear();
             }
 
+            synchronized (_google_towrite) {
+                writer_google.writeAll(_google_towrite, false);
+                _google_towrite.clear();
+            }
+
+            synchronized (_rf_towrite) {
+                writer_rf.writeAll(_rf_towrite, false);
+                _rf_towrite.clear();
+            }
+
             try {
                 writer_accelerometer.close();
                 writer_gyroscope.close();
+                writer_google.close();
+                writer_rf.close();
                 Log.i("INFO","CSV files containing feature and sensor values written successfully." );
             } catch (IOException e) {
                 e.printStackTrace();
